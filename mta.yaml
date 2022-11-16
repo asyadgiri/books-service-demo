@@ -17,7 +17,7 @@ modules:
     build-parameters:
       builder: custom
       commands:
-        - mvn clean install -s ./settings.xml
+        - mvn clean install -s ../settings.xml
       build-result: target/*-exec.jar
     provides:
       - name: srv-api # required by consumers of CAP services (e.g. approuter)
