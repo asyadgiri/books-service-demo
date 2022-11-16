@@ -1,0 +1,22 @@
+{
+  "requires": {
+    "[hybrid]": {
+      "db": {
+        "binding": {
+          "type": "cf",
+          "apiEndpoint": "https://api.cf.us10-001.hana.ondemand.com",
+          "org": "79734243trial",
+          "space": "dev",
+          "instance": "demo-service-db",
+          "key": "SharedDevKey",
+          "resolved": false
+        },
+        "kind": "hana-cloud",
+        "vcap": {
+          "name": "db"
+        }
+      }
+  
+    }
+  }
+}
