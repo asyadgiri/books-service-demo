@@ -43,7 +43,8 @@ pipeline {
                   //  sh 'mbt build'
                 }
             }
-        }
+    
+        
 
         //Publish the Test Results
         stage('Publish Results') {
@@ -70,9 +71,6 @@ pipeline {
             }
         }
 
-        
-
-
         //Ready to release - Confirm to proceed
         stage('Confirm to Proceed') {
             agent none
@@ -94,6 +92,7 @@ pipeline {
                 }
             }
         }
+    
     }
 
     post {
@@ -108,7 +107,8 @@ pipeline {
       )
         }
     }
-}
+    }
+
 
 def curl(url) {
     return sh(
