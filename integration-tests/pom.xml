@@ -32,7 +32,7 @@
 		<argLine>-Xmx${surefire.maxMemorySize}
 			-Dorg.slf4j.simpleLogger.defaultLogLevel=${surefire.logLevel}</argLine>
 
-		<jacoco.executionDataFile>${project.build.directory}/coverage-reports/jacoco.exec</jacoco.executionDataFile>
+		<jacoco.executionDataFile>${project.build.directory}/coverage-reports/ITjacoco.exec</jacoco.executionDataFile>
 		<jacoco.includes>*</jacoco.includes>
 		<jacoco.excludes>org.apache.*</jacoco.excludes>
 	</properties>
