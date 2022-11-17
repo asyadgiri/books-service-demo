@@ -1,13 +1,17 @@
 {
   "name": "approuter",
   "dependencies": {
-    "@sap/approuter": "^11.0.0",
-    "@sap/e2e-trace": "3.0.0"
+    "@sap/approuter": "^11.0.0"
+   
   },
   "engines": {
     "node": "^16"
   },
   "scripts": {
     "start": "node node_modules/@sap/approuter/approuter.js"
+  },
+
+  "devDependencies": { 
+    "@sap/e2e-trace": "3.0.0"
   }
 }
