@@ -19,8 +19,7 @@
     "mocha": "^2.5.2",
     "standard-version": "^2.2.1",
     "watchd": "github:mklabs/watchd",
-    "@sap/ux-specification": "^1.102.12",
-    "@sap/e2e-trace": "3.0.0"
+    "@sap/ux-specification": "^1.102.12"
   },
   "bake": {
     "description": "Scaffold a basic ES6 setup",
