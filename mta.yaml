@@ -74,7 +74,7 @@ resources:
     properties:
       hdi-service-name: ${service-name}
   - name: demo-service-auth
-    type: org.cloudfoundry.managed-service
+    type: org.cloudfoundry.existing-service
     parameters:
       service: xsuaa
       service-plan: application
