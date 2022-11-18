@@ -1,4 +1,5 @@
- #!/usr/bin/env groovy
+#!/usr/bin/env groovy
+
 /* groovylint-disable-next-line CompileStatic */
 @Library('piper-lib-os') _   //to use the newman docker image
 
@@ -7,6 +8,7 @@ pipeline {
     options {
         buildDiscarder logRotator(daysToKeepStr: '1', numToKeepStr: '3')
         skipDefaultCheckout()
+        timestamps() 
     }
     stages {
         stage('Init') {
@@ -104,11 +106,12 @@ pipeline {
                     newmanExecute(script: this, failOnError: true,
                         newmanInstallCommand: 'npm install newman --global newman-reporter-htmlextra --quiet',
                         newmanCollection: 'scripts/demo-scripts.postman_collection.json',
-                        newmanEnvironment: 'scripts/demoEnv.postman_environment.json'
+                        newmanEnvironment: 'scripts/demoEnv.postman_environment.json',
                         runOptions: ['run', 'scripts/demo-scripts.postman_collection.json',
                                      '--environment', 'scripts/demoEnv.postman_environment.json',
                                      '--reporters', 'cli,htmlextra',
                                      '--reporter-htmlextra-export', 'target/newman/BooksService.html'])
+
                     archiveArtifacts allowEmptyArchive: true, artifacts: '**/target/newman/**'
                     //publish HTML Report
                     publishHTML([allowMissing: true, alwaysLinkToLastBuild: false, keepAll: true, reportFiles: 'BooksService.html', reportDir: 'target/newman/', reportName: 'API Tests-Books Service'])
@@ -140,7 +143,7 @@ pipeline {
                 lock(resource: "${env.JOB_NAME}/35", inversePrecedence: true) {
                     milestone 35
                     echo 'Publish the MTAR to nexus'
-                    nexusUpload(script: this, url:'http://localhost:8081/repository/maven-releases/', nexusCredentialsId: 'nexusId' , mavenRepository: 'maven-releases')
+                 //   nexusUpload(script: this, url:'http://localhost:8081/repository/maven-releases/', nexusCredentialsId: 'nexusId' , groupId: 'demo-books-service', mavenRepository: 'maven-releases')
                 }
             }
          }
@@ -163,6 +166,19 @@ pipeline {
                 lock(resource: "${env.JOB_NAME}/40", inversePrecedence: true) {
                     milestone 40
                     echo '....Production Deployment - Cloud Foundry account'
+                    cloudFoundryDeploy(script: this, apiEndpoint: 'https://api.cf.us10-001.hana.ondemand.com/', buildTool: 'mta', deployTool: 'mtaDeployPlugin',deployType: 'blue-green',space: 'prod', org: '79734243trial', cfCredentialsId: 'cf_credential_id')
+                    
+                    //healthcheck
+                    script {
+
+                        def checkUrl = 'https://demo-service-srv-prod.cfapps.us10-001.hana.ondemand.com/'
+                        def statusCode = curl(checkUrl)
+                        if (statusCode != '200') {
+                            error "Health check failed: ${statusCode}"
+                       } else {
+                            echo "Health check for ${checkUrl} successful"
+                        }
+                    }
                 }
             }
         }
