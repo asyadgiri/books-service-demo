@@ -38,6 +38,7 @@ modules:
     build-parameters:
       ignore: ["default-env.json",".env"]
       builder: custom
+      timeout: 20m30s
       commands:
         - npm run build
     requires:
