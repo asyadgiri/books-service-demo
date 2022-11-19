@@ -8,7 +8,7 @@ pipeline {
     options {
         buildDiscarder logRotator(daysToKeepStr: '1', numToKeepStr: '3')
         skipDefaultCheckout()
-        timestamps() 
+        timestamps()
     }
     stages {
         stage('Init') {
@@ -16,17 +16,24 @@ pipeline {
                 lock(resource: "${env.JOB_NAME}/5", inversePrecedence: true) {
                     milestone 5
                     deleteDir()
-                    sh 'git clone https://github.com/AshwinSYadgiri/books-service-demo.git ./ '
+                    // sh 'git clone https://github.com/AshwinSYadgiri/books-service-demo.git ./ '
+                    checkout scm
                 }
             }
         }
 
         stage('Build ') {
+            when {
+                anyOf {
+                    branch 'master'
+                    branch 'PR-*'
+                }
+            }
 
-           steps {
+            steps {
                 lock(resource: "${env.JOB_NAME}/10", inversePrecedence: true) {
                     milestone 10
-                  mtaBuild(script: this,buildTarget: 'CF')              // We can also use mbt build if MBT tool is installed in the Jenkins
+                    mtaBuild(script: this, buildTarget: 'CF')              // We can also use mbt build if MBT tool is installed in the Jenkins
                     stash name: 'deployment', includes: '*.mtar, mta.yaml'
                     sh 'ls -la'
                 }
@@ -35,26 +42,40 @@ pipeline {
                     junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
                     jacoco execPattern: '**/target/coverage-reports/*.exec'
 
-           }
+                    //Sonar checks
+                    sonarExecuteScan(script: this, sonarTokenCredentialsId: 'sonarId', serverUrl: 'https://sonar.tools.sap/')
+                    //check for the quality gate
+                    script { 
+			            withSonarQubeEnv('sonar'){ 
+			                echo 'Sonar Scanner...'
+			            }
+			            timeout(time: 10, unit: 'MINUTES') {
+             			waitForQualityGate abortPipeline: false
+			            }
+			        }
+            }
         }
 
-        stage('Sonar and Code quality checks') {
+        stage('Code quality checks') {
+            when {
+                anyOf {
+                    branch 'master'
+                    branch 'PR-*'
+                }
+            }
 
             steps {
                 lock(resource: "${env.JOB_NAME}/15", inversePrecedence: true) {
                     milestone 15
                     sh 'ls -la'
 
-                 //code checks for JAVA - PMD
-                 sh 'mvn  -pl !integration-tests -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn --batch-mode org.apache.maven.plugins:maven-pmd-plugin:3.14.0:check'
+                    //code checks for JAVA - PMD
+                    sh 'mvn  -pl !integration-tests -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn --batch-mode org.apache.maven.plugins:maven-pmd-plugin:3.14.0:check'
 
-                 recordIssues failOnError: true, failedTotalHigh: 5, tool: pmdParser(pattern: '**/target/pmd.xml')
+                    recordIssues failOnError: true, failedTotalHigh: 5, tool: pmdParser(pattern: '**/target/pmd.xml')
 
-                //code checks for JS - ESLINT
-                npmExecuteLint(script: this, install: true, runScript: "lint", defaultNpmRegistry: 'https://registry.npmjs.org/', failOnError: false)
-
-                //Sonar checks
-                sonarExecuteScan(script: this, sonarTokenCredentialsId: 'sonarId', serverUrl: 'https://sonar.tools.sap/')
+                    //code checks for JS - ESLINT
+                    npmExecuteLint(script: this, install: true, runScript: 'lint', defaultNpmRegistry: 'https://registry.npmjs.org/', failOnError: false)
 
                 }
             }
@@ -62,27 +83,35 @@ pipeline {
 
         //Integration Stage
         stage('Integration Stage') {
-               steps {
+            when {
+                anyOf {
+                    branch 'master'
+                    branch 'PR-*'
+                }
+            }
+            steps {
                 lock(resource: "${env.JOB_NAME}/17", inversePrecedence: true) {
                     milestone 17
-                      sh 'mvn clean install -s settings.xml'
-                      junit allowEmptyResults: true, testResults:'**/integration-tests/target/surefire-reports/*.xml'
-                      jacoco execPattern: '**/target/coverage-reports/ITjacoco.exec'
+                    sh 'mvn clean install -s settings.xml'
+                    junit allowEmptyResults: true, testResults:'**/integration-tests/target/surefire-reports/*.xml'
+                    jacoco execPattern: '**/target/coverage-reports/ITjacoco.exec'
                 }
-               }
+            }
         }
 
         stage('Deployment- Dev Space') {
+            when {
+                branch 'master'
+            }
 
             steps {
                 lock(resource: "${env.JOB_NAME}/22", inversePrecedence: true) {
                     milestone 22
                     echo '....Dev Deployment ..'
-             //       cloudFoundryDeploy(script: this, apiEndpoint: 'https://api.cf.us10-001.hana.ondemand.com/', buildTool: 'mta', deployTool: 'mtaDeployPlugin',  space: 'dev', org: '79734243trial', cfCredentialsId: 'cf_credential_id')
+                    //cloudFoundryDeploy(script: this, apiEndpoint: 'https://api.cf.us10-001.hana.ondemand.com/', buildTool: 'mta', deployTool: 'mtaDeployPlugin',  space: 'dev', org: '79734243trial', cfCredentialsId: 'cf_credential_id')
 
                     //healthcheck
                     script {
-
                         def checkUrl = 'https://demo-service-srv-dev.cfapps.us10-001.hana.ondemand.com/'
                         def statusCode = curl(checkUrl)
                         if (statusCode != '200') {
@@ -91,12 +120,14 @@ pipeline {
                             echo "Health check for ${checkUrl} successful"
                         }
                     }
-
                 }
             }
         }
 
-          stage('API Tests') {
+        stage('API Tests') {
+            when {
+                branch 'master'
+            }
 
             steps {
                 lock(resource: "${env.JOB_NAME}/25", inversePrecedence: true) {
@@ -117,10 +148,12 @@ pipeline {
                     publishHTML([allowMissing: true, alwaysLinkToLastBuild: false, keepAll: true, reportFiles: 'BooksService.html', reportDir: 'target/newman/', reportName: 'API Tests-Books Service'])
                 }
             }
-          }
+        }
 
-         stage('Security') {
-
+        stage('Security') {
+            when {
+                branch 'master'
+            }
             steps {
                 lock(resource: "${env.JOB_NAME}/30", inversePrecedence: true) {
                     milestone 30
@@ -130,26 +163,32 @@ pipeline {
                     projectName: 'books-demo-service',
                     exclude: [ '**/target/**/*', '**/src/test/**/*', '**/gen/**/*' ],
                     buildDescriptorFile: 'srv/pom.xml',
-                    dockerImage: "docker.wdf.sap.corp:50000/piper/fortify:jdk11",
+                    dockerImage: 'docker.wdf.sap.corp:50000/piper/fortify:jdk11',
                     src: ['**/src/main/java/**/*'],
                     fortifyCredentialsId: 'fortifyToken')
                 }
             }
-         }
+        }
 
-         stage('Promote to Nexus') {
+        stage('Promote to Nexus') {
+            when {
+                branch 'master'
+            }
 
             steps {
                 lock(resource: "${env.JOB_NAME}/35", inversePrecedence: true) {
                     milestone 35
                     echo 'Publish the MTAR to nexus'
-                 //   nexusUpload(script: this, url:'http://localhost:8081/repository/maven-releases/', nexusCredentialsId: 'nexusId' , groupId: 'demo-books-service', mavenRepository: 'maven-releases')
+                //   nexusUpload(script: this, url:'http://localhost:8081/repository/maven-releases/', nexusCredentialsId: 'nexusId' , groupId: 'demo-books-service', mavenRepository: 'maven-releases')
                 }
             }
-         }
+        }
 
         //Ready to release - Confirm to proceed
         stage('Confirm to Proceed') {
+            when {
+                branch 'master'
+            }
             agent none
             options {
                 timeout(time: 1, unit: 'HOURS')
@@ -161,16 +200,18 @@ pipeline {
         }
 
         stage('Prod - Deployment') {
+            when {
+                branch 'master'
+            }
 
             steps {
                 lock(resource: "${env.JOB_NAME}/40", inversePrecedence: true) {
                     milestone 40
                     echo '....Production Deployment - Cloud Foundry account'
-                    cloudFoundryDeploy(script: this, apiEndpoint: 'https://api.cf.us10-001.hana.ondemand.com/', buildTool: 'mta', deployTool: 'mtaDeployPlugin',deployType: 'blue-green',space: 'prod', org: '79734243trial', cfCredentialsId: 'cf_credential_id')
-                    
+                    cloudFoundryDeploy(script: this, apiEndpoint: 'https://api.cf.us10-001.hana.ondemand.com/', buildTool: 'mta', deployTool: 'mtaDeployPlugin', deployType: 'blue-green', space: 'prod', org: '79734243trial', cfCredentialsId: 'cf_credential_id')
+
                     //healthcheck
                     script {
-
                         def checkUrl = 'https://demo-service-srv-prod.cfapps.us10-001.hana.ondemand.com/'
                         def statusCode = curl(checkUrl)
                         if (statusCode != '200') {
@@ -182,7 +223,6 @@ pipeline {
                 }
             }
         }
-
     }
 
     post {
