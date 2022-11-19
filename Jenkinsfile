@@ -50,7 +50,7 @@ pipeline {
 			                echo 'Sonar Scanner...'
 			            }
 			            timeout(time: 10, unit: 'MINUTES') {
-             			waitForQualityGate abortPipeline: false
+             			waitForQualityGate(credentialsId: "sonarId",abortPipeline: false)
 			            }
 			        }
             }
