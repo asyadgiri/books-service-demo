@@ -108,7 +108,7 @@ pipeline {
                 lock(resource: "${env.JOB_NAME}/22", inversePrecedence: true) {
                     milestone 22
                     echo '....Dev Deployment ..'
-                    //cloudFoundryDeploy(script: this, apiEndpoint: 'https://api.cf.us10-001.hana.ondemand.com/', buildTool: 'mta', deployTool: 'mtaDeployPlugin',  space: 'dev', org: '79734243trial', cfCredentialsId: 'cf_credential_id')
+                    cloudFoundryDeploy(script: this, apiEndpoint: 'https://api.cf.us10-001.hana.ondemand.com/', buildTool: 'mta', deployTool: 'mtaDeployPlugin',  space: 'dev', org: '79734243trial', cfCredentialsId: 'cf_credential_id')
 
                     //healthcheck
                     script {
