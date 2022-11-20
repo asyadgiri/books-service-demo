@@ -46,13 +46,13 @@ pipeline {
                     sonarExecuteScan(script: this, sonarTokenCredentialsId: 'sonarId', serverUrl: 'https://sonar.tools.sap/')
                     //check for the quality gate
                     script { 
-			            withSonarQubeEnv('sonar'){ 
-			                echo 'Sonar Scanner...'
-			            }
-			            timeout(time: 10, unit: 'MINUTES') {
-             			//waitForQualityGate(credentialsId: "sonarId",abortPipeline: false)
-			            }
-			        }
+                        withSonarQubeEnv('sonar'){ 
+                            echo 'Sonar Scanner...'
+                        }
+                        timeout(time: 10, unit: 'MINUTES') {
+                         //waitForQualityGate(credentialsId: "sonarId",abortPipeline: false)
+                        }
+                    }
             }
         }
 
@@ -170,7 +170,7 @@ pipeline {
             }
         }
 
-        stage('Promote to Nexus') {
+        stage('Promote to JFrog Artifactory') {
             when {
                 branch 'master'
             }
@@ -178,8 +178,25 @@ pipeline {
             steps {
                 lock(resource: "${env.JOB_NAME}/35", inversePrecedence: true) {
                     milestone 35
-                    echo 'Publish the MTAR to nexus'
-                //   nexusUpload(script: this, url:'http://localhost:8081/repository/maven-releases/', nexusCredentialsId: 'nexusId' , groupId: 'demo-books-service', mavenRepository: 'maven-releases')
+                    echo 'Publish the MTAR to JFrog Artifactory'
+                    //server details
+                    rtServer(id: "Artifactory", url: "https://demoservice.jfrog.io/artifactory", credentialsId: 'jfrogId', bypassProxy: true)
+                    //Upload the MTAR
+                    rtUpload(
+                        serverId: "Artifactory",
+                        failNoOp: true,
+                        spec: """
+                            {
+                                "files": [
+                                    {
+                                        "pattern": "*.mtar",
+                                        "target": "example-repo-local"
+                                    }
+                                ]
+                            }
+                        """
+                    )
+                
                 }
             }
         }
@@ -199,7 +216,7 @@ pipeline {
             }
         }
 
-        stage('Prod - Deployment') {
+        stage('Deployment to Production space') {
             when {
                 branch 'master'
             }
@@ -208,7 +225,7 @@ pipeline {
                 lock(resource: "${env.JOB_NAME}/40", inversePrecedence: true) {
                     milestone 40
                     echo '....Production Deployment - Cloud Foundry account'
-                    cloudFoundryDeploy(script: this, apiEndpoint: 'https://api.cf.us10-001.hana.ondemand.com/', buildTool: 'mta', deployTool: 'mtaDeployPlugin', deployType: 'blue-green', space: 'prod', org: 'ac864addtrial', cfCredentialsId: 'cf_credential_id')
+                    cloudFoundryDeploy(script: this, apiEndpoint: 'https://api.cf.us10-001.hana.ondemand.com/', buildTool: 'mta', deployTool: 'mtaDeployPlugin', deployType: 'blue-green', space: 'prod', mtaExtensionDescriptor: 'mtaextension/prod.mtaext', mtaDeployParameters:'-version-rule ALL -f', org: 'ac864addtrial', cfCredentialsId: 'cf_credential_id')
 
                     //healthcheck
                     script {

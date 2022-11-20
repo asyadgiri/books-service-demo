@@ -1,0 +1,71 @@
+--- 
+ID: demo-service-mtaext
+_schema-version: "3.1"
+extends: demo-service
+
+modules:
+  - name: demo-service-srv
+    type: java
+    path: srv
+    parameters:
+      routes:
+        -  route: demo-service-srv-d-prod.${domain}
+      buildpack: java_buildpack
+    properties:
+      SPRING_PROFILES_ACTIVE: cloud
+    build-parameters:
+      builder: custom
+      commands:
+        - mvn clean install
+      build-result: target/*-exec.jar
+    provides:
+      - name: srv-api # required by consumers of CAP services (e.g. approuter)
+        properties:
+          srv-url: https://demo-service-srv-d-prod.${domain}
+    requires:
+      - name: demo-service-db
+      - name: demo-service-auth
+      - name: app-api
+        properties:
+          CDS_MULTITENANCY_APPUI_URL: ~{url}
+
+
+  - name: demo-service
+    type: approuter.nodejs
+    path: app/ # from cds.env.folders. Consider also cds.env.build.target -> gen/app
+    parameters:
+      keep-existing-routes: true
+      disk-quota: 256M
+      memory: 256M
+      routes:
+        -  route: demo-service-d-prod.${domain}
+    requires:
+      - name: srv-api
+        group: destinations
+        properties:
+          name: srv-api # must be used in xs-app.json as well
+          url: ~{srv-url}
+          forwardAuthToken: true
+      - name: demo-service-auth
+    provides:
+      - name: app-api
+        properties:
+          url: https://demo-service-d-prod.${domain}
+
+resources:
+  - name: demo-service-db
+    type: com.sap.xs.hdi-container
+    parameters:
+      service: hana
+      service-plan: hdi-shared
+    properties:
+      hdi-service-name: ${service-name}
+  - name: demo-service-auth
+    type: org.cloudfoundry.existing-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+      config:
+        xsappname: demo-service-${org}-${space}
+        tenant-mode: dedicated
