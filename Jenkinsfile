@@ -112,7 +112,7 @@ pipeline {
 
                     //healthcheck
                     script {
-                        def checkUrl = 'https://demo-service-srv-dev.cfapps.us10-001.hana.ondemand.com/'
+                        def checkUrl = 'https://demo-service-srv-d-dev.cfapps.us10-001.hana.ondemand.com/'
                         def statusCode = curl(checkUrl)
                         if (statusCode != '200') {
                             error "Health check failed: ${statusCode}"
@@ -212,7 +212,7 @@ pipeline {
 
                     //healthcheck
                     script {
-                        def checkUrl = 'https://demo-service-srv-prod.cfapps.us10-001.hana.ondemand.com/'
+                        def checkUrl = 'https://demo-service-srv-d-prod.cfapps.us10-001.hana.ondemand.com/'
                         def statusCode = curl(checkUrl)
                         if (statusCode != '200') {
                             error "Health check failed: ${statusCode}"
