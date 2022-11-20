@@ -84,10 +84,10 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "https://demo-service-srv-dev.cfapps.us10-001.hana.ondemand.com/odata/v4/CatalogService/$metadata",
+					"raw": "https://demo-service-srv-d-dev.cfapps.us10-001.hana.ondemand.com/odata/v4/CatalogService/$metadata",
 					"protocol": "https",
 					"host": [
-						"demo-service-srv-dev",
+						"demo-service-srv-d-dev",
 						"cfapps",
 						"us10-001",
 						"hana",
@@ -136,10 +136,10 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "https://demo-service-srv-dev.cfapps.us10-001.hana.ondemand.com/odata/v4/CatalogService/Books",
+					"raw": "https://demo-service-srv-d-dev.cfapps.us10-001.hana.ondemand.com/odata/v4/CatalogService/Books",
 					"protocol": "https",
 					"host": [
-						"demo-service-srv-dev",
+						"demo-service-srv-d-dev",
 						"cfapps",
 						"us10-001",
 						"hana",

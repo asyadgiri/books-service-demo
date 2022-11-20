@@ -10,7 +10,7 @@ modules:
     path: srv
     parameters:
       routes:
-        -  route: ${app-name}-${space}.${domain}
+        -  route: ${app-name}-d-${space}.${domain}
       buildpack: java_buildpack
     properties:
       SPRING_PROFILES_ACTIVE: cloud
@@ -22,7 +22,7 @@ modules:
     provides:
       - name: srv-api # required by consumers of CAP services (e.g. approuter)
         properties:
-          srv-url: https://demo-service-srv-${space}.${domain}
+          srv-url: https://demo-service-srv-d-${space}.${domain}
     requires:
       - name: demo-service-db
       - name: demo-service-auth
@@ -52,7 +52,7 @@ modules:
       disk-quota: 256M
       memory: 256M
       routes:
-        -  route: ${app-name}-${space}.${domain}
+        -  route: ${app-name}-d-${space}.${domain}
     requires:
       - name: srv-api
         group: destinations
@@ -64,7 +64,7 @@ modules:
     provides:
       - name: app-api
         properties:
-          url: https://demo-service-${space}.${domain}
+          url: https://demo-service-d-${space}.${domain}
 
 resources:
   - name: demo-service-db
