@@ -1,7 +1,7 @@
 #!/usr/bin/env groovy
 
 /* groovylint-disable-next-line CompileStatic */
-@Library('piper-lib-os') _   //to use the newman docker image
+@Library('piper-lib-os') _   //Jenkins shared library - provides the environment/plugins to execute the scripts
 
 pipeline {
     agent any
