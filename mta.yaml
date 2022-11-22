@@ -61,12 +61,11 @@ modules:
           url: ~{srv-url}
           forwardAuthToken: true
       - name: demo-service-auth
-      - name: demo-service-repo-host
     provides:
       - name: app-api
         properties:
- 
-    
+          url: https://demo-service-d-${space}.${domain}
+
 resources:
   - name: demo-service-db
     type: com.sap.xs.hdi-container
@@ -84,5 +83,3 @@ resources:
       config:
         xsappname: demo-service-${org}-${space}
         tenant-mode: dedicated
-
-    
