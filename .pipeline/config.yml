@@ -66,8 +66,8 @@ stages:
 
   'Confirm':
     manualConfirmation: true
-     manualConfirmationMessage: 'Shall we proceed to Promote & Release?'
-     manualConfirmationTimeout: 1
+    manualConfirmationMessage: 'Shall we proceed to Promote & Release?'
+    manualConfirmationTimeout: 1
 
 #  Integration:
 #    credentials:
