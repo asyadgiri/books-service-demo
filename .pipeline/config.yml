@@ -14,8 +14,8 @@
 general:
   inferBuildTool: true
   productiveBranch: 'master'
-  gitSshKeyCredentialsId: 'git_id_pat'            //Secret Text - Personal access token
-  gitHttpsCredentialsId: 'github_credential_id'   //username with password
+  gitSshKeyCredentialsId: 'git_id_pat'            ##Secret Text - Personal access token
+  gitHttpsCredentialsId: 'github_credential_id'   ##username with password
   artifactPrepareVersion: false
   buildTool: 'mta'
   
