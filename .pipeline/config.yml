@@ -13,19 +13,61 @@
 ### General project setup
 general:
   inferBuildTool: true
+  productiveBranch: 'master'
+  gitSshKeyCredentialsId: 'git_id_pat'            //Secret Text - Personal access token
+  gitHttpsCredentialsId: 'github_credential_id'   //username with password
+  artifactPrepareVersion: false
+  buildTool: 'mta'
+  
+
 
 ### Step-specific configuration
 steps:
   mavenExecute:
     dockerImage: devxci/mbtci:1.0.14
 
+  testsPublishResults:
+    junit: [allowEmptyResults:true, testResults:**/target/surefire-reports/*.xml]
+    jacoco: [pattern:**/target/coverage-reports/*.exec, allowEmptyResults:true, archive:false, active:false]
+
   artifactPrepareVersion:
     versioningType: cloud_noTag
+  
+  sonarExecuteScan:
+    sonarTokenCredentialsId: 'sonarId'
+    serverUrl: 'https://sonar.tools.sap/'
+  
+  mavenExecuteStaticCodeChecks:
+    spotBugs: false
+  
+  fortifyExecuteScan:
+    buildTool: 'maven'
+    projectName: 'books-demo-service'
+    serverUrl: 'https://fortify.tools.sap/ssc'
+    dockerImage: 'docker.wdf.sap.corp:50000/piper/fortify:jdk11'
+    fortifyCredentialsId: 'fortifyToken'
+    src:
+      - '**/src/main/java/**/*'
+    exclude: ['**/target/**/*', '**/src/test/**/*']
+
 
 ### Stage-specific configuration
 stages:
+  'Build':
+    mavenExecuteStaticCodeChecks: true
+    npmExecuteLint: true
+  
+  'Integration':
+    installArtifacts: true
+    testsPublishResults:
+      junit: [allowEmptyResults:true, testResults:**/integration-tests/target/surefire-reports/*.xml]
+      jacoco: [pattern:**/target/coverage-reports/ITJacoco.exec, allowEmptyResults:true, archive:false, active:false]
+
+
   'Confirm':
-    manualConfirmation: false
+    manualConfirmation: true
+     manualConfirmationMessage: 'Shall we proceed to Promote & Release?'
+     manualConfirmationTimeout: 1
 
 #  Integration:
 #    credentials:
