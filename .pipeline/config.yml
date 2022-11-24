@@ -18,8 +18,7 @@ general:
   gitHttpsCredentialsId: 'github_credential_id'   ##username with password
   artifactPrepareVersion: false
   buildTool: 'mta'
-  
-
+ 
 
 ### Step-specific configuration
 steps:
@@ -27,8 +26,14 @@ steps:
     dockerImage: devxci/mbtci:1.0.14
 
   testsPublishResults:
-    junit: [allowEmptyResults:true, testResults:**/target/surefire-reports/*.xml]
-    jacoco: [pattern:**/target/coverage-reports/*.exec, allowEmptyResults:true, archive:false, active:false]
+    junit:
+      allowEmptyResults: true
+      pattern: "**/target/surefire-reports/*.xml"
+    jacoco:
+      allowEmptyResults: true
+      pattern: "**/target/coverage-reports/*.exec"
+      allowEmptyResults: true
+      archive: false
 
   artifactPrepareVersion:
     versioningType: cloud_noTag
@@ -49,7 +54,10 @@ steps:
     src:
       - '**/src/main/java/**/*'
     exclude: ['**/target/**/*', '**/src/test/**/*']
-
+  
+  mailSendNotification:
+    notifyCulprits: false
+    notificationRecipients: 'ashsy009@gmail.com'
 
 ### Stage-specific configuration
 stages:
@@ -60,8 +68,14 @@ stages:
   'Integration':
     installArtifacts: true
     testsPublishResults:
-      junit: [allowEmptyResults:true, testResults:**/integration-tests/target/surefire-reports/*.xml]
-      jacoco: [pattern:**/target/coverage-reports/ITJacoco.exec, allowEmptyResults:true, archive:false, active:false]
+    junit:
+      allowEmptyResults: true
+      pattern: "**/integration-tests/target/surefire-reports/*.xml"
+    jacoco:
+      allowEmptyResults: true
+      pattern: "**/target/coverage-reports/ITjacoco.exec"
+      allowEmptyResults: true
+      archive: false
 
 
   'Confirm':
