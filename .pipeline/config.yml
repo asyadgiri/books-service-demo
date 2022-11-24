@@ -28,12 +28,13 @@ steps:
   testsPublishResults:
     junit:
       allowEmptyResults: true
+      archive: true
       pattern: "**/target/surefire-reports/*.xml"
     jacoco:
       allowEmptyResults: true
       pattern: "**/target/coverage-reports/*.exec"
       allowEmptyResults: true
-      archive: false
+      archive: true
 
   artifactPrepareVersion:
     versioningType: cloud_noTag
@@ -64,6 +65,7 @@ stages:
   'Build':
     mavenExecuteStaticCodeChecks: true
     npmExecuteLint: true
+    sonarExecuteScan: true
   
   'Integration':
     installArtifacts: true
